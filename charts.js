@@ -108,8 +108,8 @@ const Charts = {
         if (!ctx) return;
         const monthly = this._groupByMonth(transactions);
         const labels = Object.keys(monthly).sort();
-        const inflows = labels.map(m => monthly[m].filter(t => ['deposit','dividend','sell'].includes(t.type)).reduce((s,t) => s + t.amount, 0));
-        const outflows = labels.map(m => monthly[m].filter(t => ['withdrawal','buy','fee'].includes(t.type)).reduce((s,t) => s + t.amount, 0));
+        const inflows = labels.map(m => monthly[m].filter(t => ['deposit','dividend','income','sell'].includes(t.type)).reduce((s,t) => s + t.amount, 0));
+        const outflows = labels.map(m => monthly[m].filter(t => ['withdrawal','buy','fee','tax'].includes(t.type)).reduce((s,t) => s + t.amount, 0));
         const opts = this.defaultOpts();
         this.instances['chart-cashflow-detail'] = new Chart(ctx, {
             type: 'bar',

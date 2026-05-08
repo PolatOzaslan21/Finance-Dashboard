@@ -273,6 +273,9 @@ tbody tr:last-child td { border-bottom: none; }
 .tx-badge.sell { background: rgba(245,158,11,.15); color: var(--accent-orange); }
 .tx-badge.dividend { background: rgba(139,92,246,.15); color: var(--accent-purple); }
 .tx-badge.fee { background: rgba(100,116,139,.15); color: var(--text-muted); }
+.tx-badge.income { background: rgba(6,182,212,.15); color: rgba(6,182,212,1); }
+.tx-badge.tax { background: rgba(239,68,68,.1); color: rgba(239,100,100,1); }
+.tx-badge.other { background: rgba(100,116,139,.1); color: var(--text-muted); }
 
 /* Holdings summary */
 .holdings-summary {

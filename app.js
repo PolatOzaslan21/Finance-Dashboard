@@ -63,6 +63,7 @@ async function handleFiles(files) {
     status.style.display = 'block';
     log.style.display = 'none';
     let output = '';
+    let successCount = 0;
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -80,7 +81,24 @@ async function handleFiles(files) {
 
             const result = Parser.parse(text);
             Store.addStatement(result);
-            output += `✓ ${file.name}\n  Date: ${result.date}\n  Portfolio: ${fmt(result.portfolioValue)}\n  Cash: ${fmt(result.cashBalance)}\n  Holdings: ${result.holdings.length}\n  Transactions: ${result.transactions.length}\n\n`;
+            successCount++;
+
+            const st = result.stats || {};
+            output += `✓ ${file.name}\n`;
+            output += `  Statement Date   : ${result.date}\n`;
+            output += `  Portfolio Value   : ${fmt(result.portfolioValue)}\n`;
+            output += `  Cash Balance      : ${fmt(result.cashBalance)}\n`;
+            output += `  Holdings          : ${st.holdingsCount || 0}\n`;
+            output += `  Investment Tx     : ${st.investmentTxCount || 0}\n`;
+            output += `  Account Tx        : ${st.accountTxCount || 0}\n`;
+            output += `  Dividend Tx       : ${st.dividendTxCount || 0}\n`;
+            if (st.skippedCancelled) output += `  Skipped (İptal)   : ${st.skippedCancelled}\n`;
+            if (st.skippedExpired)   output += `  Skipped (Süresi D): ${st.skippedExpired}\n`;
+            if (st.skippedIgnored)   output += `  Skipped (Ignored) : ${st.skippedIgnored}\n`;
+            if (st.warnings && st.warnings.length) {
+                st.warnings.forEach(w => { output += `  ⚠ ${w}\n`; });
+            }
+            output += '\n';
         } catch (err) {
             output += `✗ ${file.name}: ${err.message}\n\n`;
         }
@@ -90,7 +108,12 @@ async function handleFiles(files) {
     log.style.display = 'block';
     logContent.textContent = output;
     refreshDashboard();
-    toast('Statements processed successfully', 'success');
+
+    if (successCount === 0) {
+        toast('No statements imported. Check parse results.', 'error');
+    } else {
+        toast(`${successCount} statement${successCount > 1 ? 's' : ''} imported`, 'success');
+    }
 
     setTimeout(() => { status.style.display = 'none'; bar.style.width = '0'; }, 3000);
 }
@@ -99,13 +122,48 @@ async function extractPDFText(file) {
     if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let text = '';
+    const Y_TOLERANCE = 3;
+    const allLines = [];
+
     for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const content = await page.getTextContent();
-        text += content.items.map(item => item.str).join(' ') + '\n';
+
+        // Group text items by y-coordinate (transform[5]) into visual lines
+        const groups = [];
+        for (const item of content.items) {
+            const y = item.transform[5];
+            const x = item.transform[4];
+            const text = item.str;
+            if (!text) continue;
+
+            let matched = false;
+            for (const g of groups) {
+                if (Math.abs(g.y - y) < Y_TOLERANCE) {
+                    g.items.push({ x, text });
+                    // Update group y to average for better clustering
+                    g.y = (g.y + y) / 2;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                groups.push({ y, items: [{ x, text }] });
+            }
+        }
+
+        // Sort groups by y descending (PDF y goes bottom-up, so top of page = highest y)
+        groups.sort((a, b) => b.y - a.y);
+
+        for (const g of groups) {
+            // Sort items left-to-right within each line
+            g.items.sort((a, b) => a.x - b.x);
+            const line = g.items.map(it => it.text).join(' ').trim();
+            if (line) allLines.push(line);
+        }
     }
-    return text;
+
+    return allLines.join('\n');
 }
 
 /* ===== EXPORT / IMPORT ===== */
@@ -238,15 +296,15 @@ function refreshTransactions() {
         <td style="color:var(--text-muted)">${t.fund || '—'}</td>
         <td class="text-right">${t.units ? t.units.toLocaleString('tr-TR',{maximumFractionDigits:4}) : '—'}</td>
         <td class="text-right">${t.price ? fmt(t.price) : '—'}</td>
-        <td class="text-right" style="font-weight:600;color:${['deposit','sell','dividend'].includes(t.type)?'var(--accent-green)':['withdrawal','buy','fee'].includes(t.type)?'var(--accent-red)':'var(--text-primary)'}">${fmt(t.amount)}</td>
+        <td class="text-right" style="font-weight:600;color:${['deposit','sell','dividend','income'].includes(t.type)?'var(--accent-green)':['withdrawal','buy','fee','tax'].includes(t.type)?'var(--accent-red)':'var(--text-primary)'}">₺${Math.abs(t.amount).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
     </tr>`).join('');
 }
 
 function refreshCashflow() {
     const data = Store.data;
     const txs = data.transactions;
-    const inflows = txs.filter(t => ['deposit','dividend'].includes(t.type)).reduce((s,t) => s + t.amount, 0);
-    const outflows = txs.filter(t => t.type === 'withdrawal').reduce((s,t) => s + t.amount, 0);
+    const inflows = txs.filter(t => ['deposit','dividend','income'].includes(t.type)).reduce((s,t) => s + t.amount, 0);
+    const outflows = txs.filter(t => ['withdrawal','fee','tax'].includes(t.type)).reduce((s,t) => s + t.amount, 0);
     document.getElementById('cf-inflows').textContent = fmt(inflows);
     document.getElementById('cf-outflows').textContent = fmt(outflows);
     document.getElementById('cf-net').textContent = fmt(inflows - outflows);
@@ -281,7 +339,7 @@ function renderRecentTransactions(txs) {
         <td style="font-family:var(--font-mono);font-size:.8rem">${t.date}</td>
         <td><span class="tx-badge ${t.type}">${t.type}</span></td>
         <td>${t.description}</td>
-        <td class="text-right" style="font-weight:600;color:${['deposit','sell','dividend'].includes(t.type)?'var(--accent-green)':'var(--text-primary)'}">${fmt(t.amount)}</td>
+        <td class="text-right" style="font-weight:600;color:${['deposit','sell','dividend','income'].includes(t.type)?'var(--accent-green)':'var(--text-primary)'}">${fmt(t.amount)}</td>
     </tr>`).join('');
 }
 
