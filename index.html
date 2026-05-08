@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio OS — Private Finance Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">Portfolio OS</span>
+                    <span class="logo-subtitle">Private Terminal</span>
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-view="dashboard" id="nav-dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-view="holdings" id="nav-holdings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/></svg>
+                <span>Holdings</span>
+            </a>
+            <a href="#" class="nav-item" data-view="transactions" id="nav-transactions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span>Transactions</span>
+            </a>
+            <a href="#" class="nav-item" data-view="cashflow" id="nav-cashflow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                <span>Cash Flow</span>
+            </a>
+            <a href="#" class="nav-item" data-view="analytics" id="nav-analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                <span>Analytics</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item" id="nav-upload-trigger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <span>Upload Statement</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-export-trigger">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span>Export / Import</span>
+            </a>
+            <a href="#" class="nav-item" id="nav-load-demo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span>Load Demo Data</span>
+            </a>
+            <a href="#" class="nav-item danger" id="nav-clear-data">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                <span>Clear All Data</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Mobile header -->
+    <header class="mobile-header" id="mobile-header">
+        <button class="hamburger" id="hamburger-btn">
+            <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-title">Portfolio OS</span>
+        <button class="mobile-upload" id="mobile-upload-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+        <!-- Dashboard View -->
+        <section class="view active" id="view-dashboard">
+            <div class="view-header">
+                <div>
+                    <h1>Dashboard</h1>
+                    <p class="view-subtitle" id="dashboard-subtitle">Last updated: —</p>
+                </div>
+                <div class="header-actions">
+                    <div class="period-selector">
+                        <button class="period-btn active" data-period="1m">1M</button>
+                        <button class="period-btn" data-period="3m">3M</button>
+                        <button class="period-btn" data-period="6m">6M</button>
+                        <button class="period-btn" data-period="1y">1Y</button>
+                        <button class="period-btn" data-period="all">ALL</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card" id="kpi-portfolio">
+                    <div class="kpi-icon blue">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0022 16z"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Portfolio Value</span>
+                        <span class="kpi-value" id="kpi-portfolio-val">₺0.00</span>
+                        <span class="kpi-change positive" id="kpi-portfolio-change">+0.00%</span>
+                    </div>
+                </div>
+                <div class="kpi-card" id="kpi-cash">
+                    <div class="kpi-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Cash Balance</span>
+                        <span class="kpi-value" id="kpi-cash-val">₺0.00</span>
+                        <span class="kpi-change neutral" id="kpi-cash-change">—</span>
+                    </div>
+                </div>
+                <div class="kpi-card" id="kpi-deposits">
+                    <div class="kpi-icon cyan">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Deposits</span>
+                        <span class="kpi-value" id="kpi-deposits-val">₺0.00</span>
+                        <span class="kpi-change neutral" id="kpi-deposits-count">0 transactions</span>
+                    </div>
+                </div>
+                <div class="kpi-card" id="kpi-trades">
+                    <div class="kpi-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Trade Volume</span>
+                        <span class="kpi-value" id="kpi-trades-val">₺0.00</span>
+                        <span class="kpi-change neutral" id="kpi-trades-count">0 trades</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-grid">
+                <div class="chart-card wide">
+                    <div class="chart-header">
+                        <h3>Portfolio Value Over Time</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="chart-portfolio-timeline"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Asset Allocation</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="chart-allocation"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Charts Row -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly Cash Flow</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="chart-cashflow"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Monthly Trade Volume</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="chart-trade-volume"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Recent Transactions</h3>
+                    <button class="btn-ghost" id="btn-view-all-tx">View All →</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="table-recent-tx">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th class="text-right">Amount (₺)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-recent-tx">
+                            <tr class="empty-row"><td colspan="4">No transactions yet. Upload a statement or load demo data.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Holdings View -->
+        <section class="view" id="view-holdings">
+            <div class="view-header">
+                <div>
+                    <h1>Portfolio Holdings</h1>
+                    <p class="view-subtitle" id="holdings-subtitle">Current positions across all funds</p>
+                </div>
+            </div>
+            <div class="holdings-summary" id="holdings-summary">
+                <div class="holding-stat">
+                    <span class="holding-stat-label">Total Value</span>
+                    <span class="holding-stat-value" id="holdings-total-value">₺0.00</span>
+                </div>
+                <div class="holding-stat">
+                    <span class="holding-stat-label">Positions</span>
+                    <span class="holding-stat-value" id="holdings-count">0</span>
+                </div>
+                <div class="holding-stat">
+                    <span class="holding-stat-label">Largest Position</span>
+                    <span class="holding-stat-value" id="holdings-largest">—</span>
+                </div>
+            </div>
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table id="table-holdings">
+                        <thead>
+                            <tr>
+                                <th>Fund Name</th>
+                                <th>ISIN / Code</th>
+                                <th class="text-right">Units</th>
+                                <th class="text-right">Unit Price (₺)</th>
+                                <th class="text-right">Market Value (₺)</th>
+                                <th class="text-right">Weight %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-holdings">
+                            <tr class="empty-row"><td colspan="6">No holdings data available.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="chart-card" style="margin-top: 1.5rem;">
+                <div class="chart-header">
+                    <h3>Holdings Breakdown</h3>
+                </div>
+                <div class="chart-body" style="max-height: 400px;">
+                    <canvas id="chart-holdings-breakdown"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Transactions View -->
+        <section class="view" id="view-transactions">
+            <div class="view-header">
+                <div>
+                    <h1>Transaction History</h1>
+                    <p class="view-subtitle" id="tx-subtitle">All deposits, withdrawals, and trades</p>
+                </div>
+                <div class="header-actions">
+                    <div class="filter-group">
+                        <select id="tx-filter-type" class="filter-select">
+                            <option value="all">All Types</option>
+                            <option value="deposit">Deposits</option>
+                            <option value="withdrawal">Withdrawals</option>
+                            <option value="buy">Buy Orders</option>
+                            <option value="sell">Sell Orders</option>
+                            <option value="dividend">Dividends</option>
+                            <option value="fee">Fees</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="table-card">
+                <div class="table-responsive">
+                    <table id="table-transactions">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Fund</th>
+                                <th class="text-right">Units</th>
+                                <th class="text-right">Price (₺)</th>
+                                <th class="text-right">Amount (₺)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-transactions">
+                            <tr class="empty-row"><td colspan="7">No transactions found.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cash Flow View -->
+        <section class="view" id="view-cashflow">
+            <div class="view-header">
+                <div>
+                    <h1>Cash Flow Analysis</h1>
+                    <p class="view-subtitle">Net deposits, withdrawals, and balance trends</p>
+                </div>
+            </div>
+            <div class="kpi-grid small">
+                <div class="kpi-card">
+                    <div class="kpi-icon green">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Inflows</span>
+                        <span class="kpi-value" id="cf-inflows">₺0.00</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon red">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Outflows</span>
+                        <span class="kpi-value" id="cf-outflows">₺0.00</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon blue">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Net Cash Flow</span>
+                        <span class="kpi-value" id="cf-net">₺0.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-card" style="margin-top: 1.5rem;">
+                <div class="chart-header">
+                    <h3>Monthly Inflows vs Outflows</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-cashflow-detail"></canvas>
+                </div>
+            </div>
+            <div class="chart-card" style="margin-top: 1.5rem;">
+                <div class="chart-header">
+                    <h3>Cumulative Cash Balance</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-cumulative-balance"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics View -->
+        <section class="view" id="view-analytics">
+            <div class="view-header">
+                <div>
+                    <h1>Analytics</h1>
+                    <p class="view-subtitle">Performance metrics and insights</p>
+                </div>
+            </div>
+            <div class="kpi-grid small">
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <span class="kpi-label">Statements Loaded</span>
+                        <span class="kpi-value" id="an-statements">0</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <span class="kpi-label">Date Range</span>
+                        <span class="kpi-value small-text" id="an-range">—</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <span class="kpi-label">Avg Monthly Deposit</span>
+                        <span class="kpi-value" id="an-avg-deposit">₺0</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-content">
+                        <span class="kpi-label">Portfolio Growth</span>
+                        <span class="kpi-value" id="an-growth">0%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-card" style="margin-top: 1.5rem;">
+                <div class="chart-header">
+                    <h3>Portfolio Value vs Total Deposits</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-value-vs-deposits"></canvas>
+                </div>
+            </div>
+            <div class="chart-card" style="margin-top: 1.5rem;">
+                <div class="chart-header">
+                    <h3>Holding Weights Over Time</h3>
+                </div>
+                <div class="chart-body">
+                    <canvas id="chart-weights-time"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="modal-upload">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Upload Statement</h2>
+                <button class="modal-close" id="modal-upload-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-zone" id="upload-zone">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="upload-icon">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p class="upload-title">Drop your Midas statement here</p>
+                    <p class="upload-subtitle">Supports PDF and TXT files</p>
+                    <input type="file" id="file-input" accept=".pdf,.txt,.text" multiple hidden>
+                    <button class="btn-primary" id="btn-browse">Browse Files</button>
+                </div>
+                <div class="upload-status" id="upload-status" style="display:none;">
+                    <div class="upload-progress">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                    <p id="upload-status-text">Processing...</p>
+                </div>
+                <div class="upload-log" id="upload-log" style="display:none;">
+                    <h4>Parse Results</h4>
+                    <pre id="upload-log-content"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export/Import Modal -->
+    <div class="modal-overlay" id="modal-export">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Export / Import Data</h2>
+                <button class="modal-close" id="modal-export-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="export-section">
+                    <h4>Export</h4>
+                    <p>Download all your dashboard data as a JSON file for backup.</p>
+                    <button class="btn-primary" id="btn-export-json">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export JSON
+                    </button>
+                </div>
+                <div class="divider"></div>
+                <div class="export-section">
+                    <h4>Import</h4>
+                    <p>Restore data from a previously exported JSON file. This will replace all current data.</p>
+                    <input type="file" id="import-file-input" accept=".json" hidden>
+                    <button class="btn-secondary" id="btn-import-json">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;margin-right:6px;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Import JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="data.js"></script>
+    <script src="charts.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
