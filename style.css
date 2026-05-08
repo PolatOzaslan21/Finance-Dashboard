@@ -423,3 +423,32 @@ tbody tr:last-child td { border-bottom: none; }
     .kpi-grid { grid-template-columns: 1fr; }
     thead th, tbody td { padding: .5rem .6rem; font-size: .78rem; }
 }
+
+/* ===== iOS STANDALONE / PWA SAFE AREA ===== */
+@supports (padding-top: env(safe-area-inset-top)) {
+    /* Only apply safe-area adjustments in standalone (home-screen) mode */
+    @media (display-mode: standalone) {
+        .mobile-header {
+            padding-top: env(safe-area-inset-top);
+            height: calc(56px + env(safe-area-inset-top));
+        }
+        .sidebar {
+            padding-top: env(safe-area-inset-top);
+        }
+        .main-content {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        .toast-container {
+            bottom: calc(1.5rem + env(safe-area-inset-bottom));
+        }
+        .modal-overlay {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+    }
+    /* Mobile + standalone: adjust main content top for taller header */
+    @media (display-mode: standalone) and (max-width: 768px) {
+        .main-content {
+            padding-top: calc(56px + env(safe-area-inset-top) + 1rem);
+        }
+    }
+}

@@ -1,3 +1,10 @@
+/* ===== SERVICE WORKER REGISTRATION ===== */
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(console.warn);
+    });
+}
+
 /* ===== UI CONTROLLER ===== */
 document.addEventListener('DOMContentLoaded', () => {
     Store.load();
