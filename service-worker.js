@@ -1,5 +1,5 @@
 /* ===== SERVICE WORKER — App Shell Cache Only ===== */
-const CACHE_NAME = 'portfolio-os-v1';
+const CACHE_NAME = 'portfolio-os-v2';
 const APP_SHELL = [
     './',
     './index.html',
