@@ -62,9 +62,10 @@ body {
     display: flex; flex-direction: column;
     z-index: 100;
     transition: transform var(--transition);
+    overflow: hidden;
 }
 
-.sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+.sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); flex: 0 0 auto; }
 
 .logo { display: flex; align-items: center; gap: .75rem; }
 
@@ -80,7 +81,7 @@ body {
 .logo-title { font-weight: 700; font-size: 1.05rem; display: block; letter-spacing: -.02em; }
 .logo-subtitle { font-size: .7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; display: block; }
 
-.sidebar-nav { flex: 1; padding: 1rem .75rem; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+.sidebar-nav { flex: 1 1 auto; min-height: 0; padding: 1rem .75rem; padding-bottom: .75rem; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
 .nav-item {
     display: flex; align-items: center; gap: .75rem;
@@ -98,7 +99,7 @@ body {
 .nav-item.danger { color: var(--accent-red); }
 .nav-item.danger:hover { background: var(--accent-red-glow); }
 
-.sidebar-footer { padding: .75rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+.sidebar-footer { padding: .75rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; flex: 0 0 auto; }
 
 /* ===== MOBILE HEADER ===== */
 .mobile-header {
@@ -410,13 +411,43 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 @media (max-width: 768px) {
-    .sidebar { transform: translateX(-100%); }
+    .sidebar {
+        transform: translateX(-100%);
+        width: min(82vw, 320px);
+        height: 100dvh;
+        max-height: 100dvh;
+        top: 0; bottom: auto;
+    }
     .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
     .mobile-header { display: flex; }
     .main-content { margin-left: 0; padding: 1rem; padding-top: calc(56px + 1rem); }
     .kpi-grid { grid-template-columns: 1fr 1fr; }
     .view-header h1 { font-size: 1.3rem; }
     .modal { max-width: 95%; }
+
+    .sidebar-header { padding: 1rem; }
+    .nav-item { padding: .6rem .85rem; font-size: .84rem; }
+    .sidebar-footer {
+        padding: .65rem .75rem;
+        padding-bottom: calc(.75rem + env(safe-area-inset-bottom, 0px));
+    }
+}
+
+/* Sidebar backdrop overlay */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 99;
+    -webkit-tap-highlight-color: transparent;
+}
+.sidebar-backdrop.open {
+    display: block;
+    animation: fadeIn .2s ease;
+}
+@media (min-width: 769px) {
+    .sidebar-backdrop { display: none !important; }
 }
 
 @media (max-width: 480px) {
@@ -426,7 +457,6 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* ===== iOS STANDALONE / PWA SAFE AREA ===== */
 @supports (padding-top: env(safe-area-inset-top)) {
-    /* Only apply safe-area adjustments in standalone (home-screen) mode */
     @media (display-mode: standalone) {
         .mobile-header {
             padding-top: env(safe-area-inset-top);
@@ -445,8 +475,12 @@ tbody tr:last-child td { border-bottom: none; }
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
     }
-    /* Mobile + standalone: adjust main content top for taller header */
     @media (display-mode: standalone) and (max-width: 768px) {
+        .sidebar {
+            height: 100dvh;
+            max-height: 100dvh;
+            /* padding-top already set above; height includes it naturally */
+        }
         .main-content {
             padding-top: calc(56px + env(safe-area-inset-top) + 1rem);
         }

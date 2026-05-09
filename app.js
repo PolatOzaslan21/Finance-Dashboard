@@ -20,6 +20,25 @@ function fmtInt(n) { return '₺' + Number(n||0).toLocaleString('tr-TR', { minim
 function pct(n) { return (n >= 0 ? '+' : '') + n.toFixed(2) + '%'; }
 
 /* ===== NAVIGATION ===== */
+function closeMobileSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-backdrop').classList.remove('open');
+}
+
+function openMobileSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('sidebar-backdrop').classList.add('open');
+}
+
+function toggleMobileSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar.classList.contains('open')) {
+        closeMobileSidebar();
+    } else {
+        openMobileSidebar();
+    }
+}
+
 function initNavigation() {
     document.querySelectorAll('.nav-item[data-view]').forEach(item => {
         item.addEventListener('click', e => {
@@ -29,13 +48,36 @@ function initNavigation() {
             item.classList.add('active');
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + view).classList.add('active');
-            if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+            if (window.innerWidth <= 768) closeMobileSidebar();
             refreshView(view);
         });
     });
-    document.getElementById('hamburger-btn').addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('open');
+
+    document.getElementById('hamburger-btn').addEventListener('click', toggleMobileSidebar);
+
+    // Backdrop click closes sidebar
+    document.getElementById('sidebar-backdrop').addEventListener('click', closeMobileSidebar);
+
+    // Footer items close sidebar on mobile when clicked
+    // Modal triggers: delay close so modal can open first
+    ['nav-upload-trigger', 'nav-export-trigger'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', () => {
+                if (window.innerWidth <= 768) setTimeout(closeMobileSidebar, 150);
+            });
+        }
     });
+    // Non-modal footer items: close immediately
+    ['nav-load-demo', 'nav-clear-data'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', () => {
+                if (window.innerWidth <= 768) closeMobileSidebar();
+            });
+        }
+    });
+
     document.getElementById('btn-view-all-tx').addEventListener('click', () => {
         document.querySelector('[data-view="transactions"]').click();
     });
